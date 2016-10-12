@@ -19,7 +19,7 @@ Go::Application.routes.draw do
   mount JasmineRails::Engine => '/jasmine-specs-new', as: :jasmine_new if defined?(JasmineRails)
 
   unless defined?(CONSTANTS)
-    USER_NAME_FORMAT = GROUP_NAME_FORMAT = TEMPLATE_NAME_FORMAT = PIPELINE_NAME_FORMAT = STAGE_NAME_FORMAT = ENVIRONMENT_NAME_FORMAT = /[\w\-][\w\-.]*/
+    ELASTIC_AGENT_PROFILE_ID_FORMAT = USER_NAME_FORMAT = GROUP_NAME_FORMAT = TEMPLATE_NAME_FORMAT = PIPELINE_NAME_FORMAT = STAGE_NAME_FORMAT = ENVIRONMENT_NAME_FORMAT = /[\w\-][\w\-.]*/
     JOB_NAME_FORMAT = /[\w\-.]+/
     PIPELINE_COUNTER_FORMAT = STAGE_COUNTER_FORMAT = /-?\d+/
     NON_NEGATIVE_INTEGER = /\d+/
@@ -224,13 +224,19 @@ Go::Application.routes.draw do
         patch :update, on: :member
       end
 
+      namespace :elastic do
+        resources :profiles, param: :profile_id, only: [:create, :index, :show, :destroy, :update], constraints: {profile_id: ELASTIC_AGENT_PROFILE_ID_FORMAT}
+      end
+
       namespace :admin do
         resources :pipelines, param: :pipeline_name, only: [:show, :update, :create, :destroy], constraints: {pipeline_name: PIPELINE_NAME_FORMAT}
         resources :templates, param: :template_name, only: [:show, :index, :update, :create, :destroy], constraints: {template_name: TEMPLATE_NAME_FORMAT}
+        resources :repositories, param: :repo_id, only: [:show, :index, :destroy, :create, :update]
         resources :environments, param: :name, only: [:show, :destroy, :create, :update, :index], constraints: {:name => ENVIRONMENT_NAME_FORMAT} do
           patch on: :member, action: :patch
           put on: :member, action: :put
         end
+
         post :material_test, controller: :material_test, action: :test, as: :material_test
         namespace :internal do
           resources :pipelines, only: [:index]
@@ -260,6 +266,7 @@ Go::Application.routes.draw do
     api_version(:module => 'ApiV2', header: {name: 'Accept', value: 'application/vnd.go.cd.v2+json'}) do
       namespace :admin do
         resources :pipelines, param: :pipeline_name, only: [:show, :update, :create, :destroy], constraints: {pipeline_name: PIPELINE_NAME_FORMAT}
+        resources :templates, param: :template_name, only: [:show, :index, :update, :create, :destroy], constraints: {template_name: TEMPLATE_NAME_FORMAT}
       end
 
       resources :agents, param: :uuid, except: [:new, :create, :edit, :update] do

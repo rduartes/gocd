@@ -71,6 +71,25 @@ define(['lodash', "models/pipeline_configs/pipeline", 'models/pipeline_configs/t
       expect(pipeline.trackingTool().type()).toBe('generic');
     });
 
+    it("should default the pipeline auto scheduling to true", function() {
+      expect(pipeline.isFirstStageAutoTriggered()).toBe(true);
+    });
+
+    it("should default the pipeline scheduling type to the approval type of first stage", function () {
+      var pipeline = Pipeline.fromJSON({
+        stages:                  [{
+          name:     'sampleStage',
+          approval: {
+            type: 'manual'
+          },
+          jobs:     [{
+            name: 'sampleJob'
+          }]
+        }]
+      });
+      expect(pipeline.isFirstStageAutoTriggered()).toBe(false);
+    });
+
     describe("validations", function () {
       it("should validate presence of labelTemplate", function () {
         pipeline.labelTemplate("");
@@ -217,13 +236,14 @@ define(['lodash', "models/pipeline_configs/pipeline", 'models/pipeline_configs/t
         materials:               [{
           type:       "svn",
           attributes: {
-            name:        "materialA",
-            auto_update: false,
-            filter:      null,
-            destination: "dest_folder",
-            url:         "http://your-svn/",
-            username:    "",
-            password:    ""
+            name:          "materialA",
+            auto_update:   false,
+            filter:        null,
+            invert_filter: false,
+            destination:   "dest_folder",
+            url:           "http://your-svn/",
+            username:      "",
+            password:      ""
           }
         }],
         tracking_tool:           {

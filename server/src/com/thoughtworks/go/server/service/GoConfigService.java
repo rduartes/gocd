@@ -28,6 +28,8 @@ import com.thoughtworks.go.config.validation.GoConfigValidity;
 import com.thoughtworks.go.domain.*;
 import com.thoughtworks.go.domain.config.Admin;
 import com.thoughtworks.go.domain.materials.MaterialConfig;
+import com.thoughtworks.go.domain.packagerepository.PackageRepositories;
+import com.thoughtworks.go.domain.packagerepository.PackageRepository;
 import com.thoughtworks.go.domain.scm.SCM;
 import com.thoughtworks.go.i18n.LocalizedMessage;
 import com.thoughtworks.go.listener.BaseUrlChangeListener;
@@ -35,7 +37,6 @@ import com.thoughtworks.go.listener.ConfigChangedListener;
 import com.thoughtworks.go.presentation.ConfigForEdit;
 import com.thoughtworks.go.presentation.TriStateSelection;
 import com.thoughtworks.go.server.cache.GoCache;
-import com.thoughtworks.go.server.domain.AgentInstances;
 import com.thoughtworks.go.server.domain.PipelineConfigDependencyGraph;
 import com.thoughtworks.go.server.domain.Username;
 import com.thoughtworks.go.server.domain.user.PipelineSelections;
@@ -50,7 +51,6 @@ import com.thoughtworks.go.service.ConfigRepository;
 import com.thoughtworks.go.util.Clock;
 import com.thoughtworks.go.util.ExceptionUtils;
 import com.thoughtworks.go.util.SystemTimeClock;
-import com.thoughtworks.go.util.TriState;
 import org.apache.log4j.Logger;
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
@@ -801,6 +801,10 @@ public class GoConfigService implements Initializer, CruiseConfigProvider {
         return getCurrentConfig().isGroupAdministrator(userName);
     }
 
+    public boolean isGroupAdministrator(final Username userName) {
+        return getCurrentConfig().isGroupAdministrator(userName.getUsername());
+    }
+
     public boolean hasEnvironmentNamed(final CaseInsensitiveString environmentName) {
         return getCurrentConfig().getEnvironments().hasEnvironmentNamed(environmentName);
     }
@@ -962,6 +966,14 @@ public class GoConfigService implements Initializer, CruiseConfigProvider {
 
     public boolean isAdministrator(CaseInsensitiveString username) {
         return isAdministrator(username.toString());
+    }
+
+    public PackageRepository getPackageRepository(String repoId) {
+        return cruiseConfig().getPackageRepositories().find(repoId);
+    }
+
+    public PackageRepositories getPackageRepositories() {
+        return cruiseConfig().getPackageRepositories();
     }
 
     public abstract class XmlPartialSaver<T> {

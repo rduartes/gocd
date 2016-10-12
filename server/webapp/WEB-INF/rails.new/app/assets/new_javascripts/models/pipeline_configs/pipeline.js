@@ -15,8 +15,8 @@
  */
 
 define(['mithril', 'lodash', 'string-plus', 'models/model_mixins', 'models/pipeline_configs/environment_variables', 'models/pipeline_configs/parameters',
-  'models/pipeline_configs/materials', 'models/pipeline_configs/tracking_tool', 'models/pipeline_configs/stages', 'helpers/mrequest', 'models/validatable_mixin', 'js-routes'
-], function (m, _, s, Mixins, EnvironmentVariables, Parameters, Materials, TrackingTool, Stages, mrequest, Validatable, Routes) {
+  'models/pipeline_configs/materials', 'models/pipeline_configs/tracking_tool', 'models/pipeline_configs/stages', 'models/pipeline_configs/approval', 'helpers/mrequest', 'models/validatable_mixin', 'js-routes'
+], function (m, _, s, Mixins, EnvironmentVariables, Parameters, Materials, TrackingTool, Stages, Approval, mrequest, Validatable, Routes) {
   var Pipeline = function (data) {
     this.constructor.modelType = 'pipeline';
     Mixins.HasUUID.call(this);
@@ -77,6 +77,10 @@ define(['mithril', 'lodash', 'string-plus', 'models/model_mixins', 'models/pipel
         data:    JSON.parse(JSON.stringify(this, s.snakeCaser))
       });
     };
+
+    this.isFirstStageAutoTriggered = function () {
+      return this.stages().countStage() === 0 ? true : this.stages().firstStage().approval().isSuccess();
+    };
   };
 
   Pipeline.fromJSON = function (data) {
@@ -98,6 +102,7 @@ define(['mithril', 'lodash', 'string-plus', 'models/model_mixins', 'models/pipel
   Pipeline.Timer = function (data) {
     this.constructor.modelType = 'pipelineTimer';
     Mixins.HasUUID.call(this);
+    Validatable.call(this, data);
 
     this.spec          = m.prop(s.defaultToIfBlank(data.spec, ''));
     this.onlyOnChanges = m.prop(data.onlyOnChanges);
@@ -110,8 +115,9 @@ define(['mithril', 'lodash', 'string-plus', 'models/model_mixins', 'models/pipel
   Pipeline.Timer.fromJSON = function (data) {
     if (!_.isEmpty(data)) {
       return new Pipeline.Timer({
-        spec:          data.spec,
-        onlyOnChanges: data.only_on_changes
+        spec:                  data.spec,
+        onlyOnChanges:         data.only_on_changes,
+        errors:                data.errors
       });
     }
   };

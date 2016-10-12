@@ -17,17 +17,22 @@
 define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipeline_configs/materials_config_widget"], function ($, m, Materials, MaterialsConfigWidget) {
   describe("Material Widget", function () {
     var $root = $('#mithril-mount-point'), root = $root.get(0);
-    beforeAll(function() {
-      spyOn(m, 'request').and.callFake(function() {
+    beforeAll(function () {
+      spyOn(m, 'request').and.callFake(function () {
         return $.Deferred().promise();
       });
+    });
+
+    afterAll(function () {
+      m.mount(root, null);
+      m.redraw(true);
     });
 
     describe('SVN View', function () {
       var material;
       beforeAll(function () {
         var materials = new Materials();
-        material = materials.createMaterial({
+        material      = materials.createMaterial({
           type:           'svn',
           url:            "http://svn.example.com/svn/myProject",
           username:       "bob",
@@ -36,43 +41,56 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
           destination:    "projectA",
           name:           "svn-repo",
           autoUpdate:     true,
-          filter:         new Materials.Filter({ignore: ['*.doc']})
+          filter:         new Materials.Filter({ignore: ['*.doc']}),
+          invertFilter:  true
         });
 
         mount(materials);
         viewMaterial();
       });
 
+      afterAll(function () {
+        unmount();
+      });
+
       it('should bind url', function () {
-        expect($root.find("input[data-prop-name='url']").val()).toBe(material.url());
+        expect($root.find("input[data-prop-name='url']")).toHaveValue(material.url());
       });
 
       it('should bind password', function () {
-        expect($root.find("input[data-prop-name='passwordValue']").val()).toBe("p@ssw0rd");
+        expect($root.find("input[data-prop-name='passwordValue']")).toHaveValue("p@ssw0rd");
       });
 
       it('should bind username', function () {
-        expect($root.find("input[data-prop-name='username']").val()).toBe(material.username());
+        expect($root.find("input[data-prop-name='username']")).toHaveValue(material.username());
       });
 
       it('should bind checkExternals', function () {
-        expect($root.find("input[data-prop-name='checkExternals']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='checkExternals']")).toHaveValue('on');
       });
 
       it('should bind name', function () {
-        expect($root.find("input[data-prop-name='name']").val()).toBe(material.name());
+        expect($root.find("input[data-prop-name='name']")).toHaveValue(material.name());
       });
 
       it('should bind destination', function () {
-        expect($root.find("input[data-prop-name='destination']").val()).toBe(material.destination());
+        expect($root.find("input[data-prop-name='destination']")).toHaveValue(material.destination());
       });
 
       it('should bind the ignore fields', function () {
-        expect($root.find("input[data-prop-name='ignore']").val()).toBe('*.doc');
+        expect($root.find("input[data-prop-name='ignore']")).toHaveValue('*.doc');
+      });
+
+      it('should bind invertFilter', function () {
+        expect($root.find("input[data-prop-name='invertFilter']")).toBeChecked();
+      });
+
+      it('should show tooltip message based on invertFilter', function () {
+        expect($root.html()).toContain('(Optional) Enter the paths to be included while triggering pipelines. Separate multiple entries with a comma.');
       });
 
       it('should bind autoUpdate value', function () {
-        expect($root.find("input[data-prop-name='autoUpdate']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='autoUpdate']")).toBeChecked();
       });
     });
 
@@ -80,13 +98,13 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
       var material;
       beforeAll(function () {
         var materials = new Materials();
-        material = materials.createMaterial({
+        material      = materials.createMaterial({
           type:         'git',
           url:          "http://git.example.com/git/myProject",
           branch:       "release-1.2",
           destination:  "projectA",
           name:         "git-repo",
-          autoUpdate:   true,
+          autoUpdate:   false,
           filter:       new Materials.Filter({ignore: ['*.doc']}),
           shallowClone: true
         });
@@ -95,32 +113,44 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
         viewMaterial();
       });
 
+      afterAll(function () {
+        unmount();
+      });
+
       it('should bind url', function () {
-        expect($root.find("input[data-prop-name='url']").val()).toBe(material.url());
+        expect($root.find("input[data-prop-name='url']")).toHaveValue(material.url());
       });
 
       it('should bind branch', function () {
-        expect($root.find("input[data-prop-name='branch']").val()).toBe(material.branch());
+        expect($root.find("input[data-prop-name='branch']")).toHaveValue(material.branch());
       });
 
       it('should bind name', function () {
-        expect($root.find("input[data-prop-name='name']").val()).toBe(material.name());
+        expect($root.find("input[data-prop-name='name']")).toHaveValue(material.name());
       });
 
       it('should bind destination', function () {
-        expect($root.find("input[data-prop-name='destination']").val()).toBe(material.destination());
+        expect($root.find("input[data-prop-name='destination']")).toHaveValue(material.destination());
       });
 
       it('should bind the ignore fields', function () {
-        expect($root.find("input[data-prop-name='ignore']").val()).toBe('*.doc');
+        expect($root.find("input[data-prop-name='ignore']")).toHaveValue('*.doc');
+      });
+
+      it('should bind invertFilter', function () {
+        expect($root.find("input[data-prop-name='invertFilter']")).not.toBeChecked();
       });
 
       it('should bind autoUpdate value', function () {
-        expect($root.find("input[data-prop-name='autoUpdate']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='autoUpdate']")).not.toBeChecked();
+      });
+
+      it('should show tooltip message based on invertFilter', function () {
+        expect($root.html()).toContain('(Optional) Enter the paths to be excluded while triggering pipelines. Separate multiple entries with a comma.');
       });
 
       it('should bind shallow clone value', function () {
-        expect($root.find("input[data-prop-name='shallowClone']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='shallowClone']")).toBeChecked();
       });
     });
 
@@ -128,7 +158,7 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
       var material;
       beforeAll(function () {
         var materials = new Materials();
-        material = materials.createMaterial({
+        material      = materials.createMaterial({
           type:        'hg',
           url:         "http://hg.example.com/hg/myProject",
           destination: "projectA",
@@ -141,24 +171,36 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
         viewMaterial();
       });
 
+      afterAll(function () {
+        unmount();
+      });
+
       it('should bind url', function () {
-        expect($root.find("input[data-prop-name='url']").val()).toBe(material.url());
+        expect($root.find("input[data-prop-name='url']")).toHaveValue(material.url());
       });
 
       it('should bind name', function () {
-        expect($root.find("input[data-prop-name='name']").val()).toBe(material.name());
+        expect($root.find("input[data-prop-name='name']")).toHaveValue(material.name());
       });
 
       it('should bind destination', function () {
-        expect($root.find("input[data-prop-name='destination']").val()).toBe(material.destination());
+        expect($root.find("input[data-prop-name='destination']")).toHaveValue(material.destination());
       });
 
       it('should bind the ignore fields', function () {
-        expect($root.find("input[data-prop-name='ignore']").val()).toBe('*.doc');
+        expect($root.find("input[data-prop-name='ignore']")).toHaveValue('*.doc');
+      });
+
+      it('should bind invertFilter', function () {
+        expect($root.find("input[data-prop-name='invertFilter']")).not.toBeChecked();
+      });
+
+      it('should show tooltip message based on invertFilter', function () {
+        expect($root.html()).toContain('(Optional) Enter the paths to be excluded while triggering pipelines. Separate multiple entries with a comma.');
       });
 
       it('should bind autoUpdate value', function () {
-        expect($root.find("input[data-prop-name='autoUpdate']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='autoUpdate']")).toBeChecked();
       });
     });
 
@@ -166,57 +208,70 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
       var material;
       beforeAll(function () {
         var materials = new Materials();
-        material = materials.createMaterial({
-          type:        'p4',
-          port:        "p4.example.com:1666",
-          username:    "bob",
-          password:    "p@ssw0rd",
-          useTickets:  true,
-          destination: "projectA",
-          view:        "//depot/dev/source...          //anything/source/",
-          name:        "perforce-repo",
-          autoUpdate:  true,
-          filter:      new Materials.Filter({ignore: ['*.doc']})
+        material      = materials.createMaterial({
+          type:          'p4',
+          port:          "p4.example.com:1666",
+          username:      "bob",
+          password:      "p@ssw0rd",
+          useTickets:    true,
+          destination:   "projectA",
+          view:          "//depot/dev/source...          //anything/source/",
+          name:          "perforce-repo",
+          autoUpdate:    true,
+          filter:        new Materials.Filter({ignore: ['*.doc']}),
+          invertFilter: true
         });
 
         mount(materials);
         viewMaterial();
       });
 
+      afterAll(function () {
+        unmount();
+      });
+
       it('should bind port', function () {
-        expect($root.find("input[data-prop-name='port']").val()).toBe(material.port());
+        expect($root.find("input[data-prop-name='port']")).toHaveValue(material.port());
       });
 
       it('should bind username', function () {
-        expect($root.find("input[data-prop-name='username']").val()).toBe(material.username());
+        expect($root.find("input[data-prop-name='username']")).toHaveValue(material.username());
       });
 
       it('should bind view', function () {
-        expect($root.find("textarea[data-prop-name='view']").val()).toBe(material.view());
+        expect($root.find("textarea[data-prop-name='view']")).toHaveValue(material.view());
       });
 
       it('should bind password value', function () {
-        expect($root.find("input[data-prop-name='passwordValue']").val()).toBe('p@ssw0rd');
+        expect($root.find("input[data-prop-name='passwordValue']")).toHaveValue('p@ssw0rd');
       });
 
       it('should bind useTickets value', function () {
-        expect($root.find("input[data-prop-name='useTickets']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='useTickets']")).toHaveValue('on');
       });
 
       it('should bind name', function () {
-        expect($root.find("input[data-prop-name='name']").val()).toBe(material.name());
+        expect($root.find("input[data-prop-name='name']")).toHaveValue(material.name());
       });
 
       it('should bind destination', function () {
-        expect($root.find("input[data-prop-name='destination']").val()).toBe(material.destination());
+        expect($root.find("input[data-prop-name='destination']")).toHaveValue(material.destination());
       });
 
       it('should bind the ignore fields', function () {
-        expect($root.find("input[data-prop-name='ignore']").val()).toBe('*.doc');
+        expect($root.find("input[data-prop-name='ignore']")).toHaveValue('*.doc');
+      });
+
+      it('should bind invertFilter', function () {
+        expect($root.find("input[data-prop-name='invertFilter']")).toBeChecked();
+      });
+
+      it('should show tooltip message based on invertFilter', function () {
+        expect($root.html()).toContain('(Optional) Enter the paths to be included while triggering pipelines. Separate multiple entries with a comma.');
       });
 
       it('should bind autoUpdate value', function () {
-        expect($root.find("input[data-prop-name='autoUpdate']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='autoUpdate']")).toBeChecked();
       });
     });
 
@@ -224,7 +279,7 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
       var material;
       beforeAll(function () {
         var materials = new Materials();
-        material = materials.createMaterial({
+        material      = materials.createMaterial({
           type:        'tfs',
           url:         "http://tfs.example.com/tfs/projectA",
           username:    "bob",
@@ -234,47 +289,60 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
           projectPath: "$/webApp",
           name:        "tfs-repo",
           autoUpdate:  true,
-          filter:      new Materials.Filter({ignore: ['*.doc']})
+          filter:      new Materials.Filter({ignore: ['*.doc']}),
+          invertFilter: true
         });
 
         mount(materials);
         viewMaterial();
       });
 
+      afterAll(function () {
+        unmount();
+      });
+
       it('should bind url', function () {
-        expect($root.find("input[data-prop-name='url']").val()).toBe(material.url());
+        expect($root.find("input[data-prop-name='url']")).toHaveValue(material.url());
       });
 
       it('should bind username', function () {
-        expect($root.find("input[data-prop-name='username']").val()).toBe(material.username());
+        expect($root.find("input[data-prop-name='username']")).toHaveValue(material.username());
       });
 
       it('should bind domain', function () {
-        expect($root.find("input[data-prop-name='domain']").val()).toBe(material.domain());
+        expect($root.find("input[data-prop-name='domain']")).toHaveValue(material.domain());
       });
 
       it('should bind password value', function () {
-        expect($root.find("input[data-prop-name='passwordValue']").val()).toBe('p@ssw0rd');
+        expect($root.find("input[data-prop-name='passwordValue']")).toHaveValue('p@ssw0rd');
       });
 
       it('should bind projectPath', function () {
-        expect($root.find("input[data-prop-name='projectPath']").val()).toBe(material.projectPath());
+        expect($root.find("input[data-prop-name='projectPath']")).toHaveValue(material.projectPath());
       });
 
       it('should bind name', function () {
-        expect($root.find("input[data-prop-name='name']").val()).toBe(material.name());
+        expect($root.find("input[data-prop-name='name']")).toHaveValue(material.name());
       });
 
       it('should bind destination', function () {
-        expect($root.find("input[data-prop-name='destination']").val()).toBe(material.destination());
+        expect($root.find("input[data-prop-name='destination']")).toHaveValue(material.destination());
       });
 
       it('should bind the ignore fields', function () {
-        expect($root.find("input[data-prop-name='ignore']").val()).toBe('*.doc');
+        expect($root.find("input[data-prop-name='ignore']")).toHaveValue('*.doc');
+      });
+
+      it('should bind invertFilter', function () {
+        expect($root.find("input[data-prop-name='invertFilter']")).toBeChecked();
+      });
+
+      it('should show tooltip message based on invertFilter', function () {
+        expect($root.html()).toContain('(Optional) Enter the paths to be included while triggering pipelines. Separate multiple entries with a comma.');
       });
 
       it('should bind autoUpdate value', function () {
-        expect($root.find("input[data-prop-name='autoUpdate']").val()).toBe('on');
+        expect($root.find("input[data-prop-name='autoUpdate']")).toBeChecked();
       });
     });
 
@@ -282,7 +350,7 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
       var material;
       beforeAll(function () {
         var materials = new Materials();
-        material = materials.createMaterial({
+        material      = materials.createMaterial({
           type:       'dependency',
           name:       'dependencyMaterial',
           pipeline:   'pipeline1',
@@ -294,12 +362,16 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
         viewMaterial();
       });
 
+      afterAll(function () {
+        unmount();
+      });
+
       it('should bind name', function () {
-        expect($root.find("input[data-prop-name='name']").val()).toBe(material.name());
+        expect($root.find("input[data-prop-name='name']")).toHaveValue(material.name());
       });
 
       it('should bind pipeline and stage', function () {
-        expect($root.find("input[name='pipeline-stage']").val()).toBe('pipeline1 [stage1]');
+        expect($root.find("input[name='pipeline-stage']")).toHaveValue('pipeline1 [stage1]');
       });
     });
 
@@ -309,6 +381,11 @@ define(["jquery", "mithril", "models/pipeline_configs/materials", "views/pipelin
       );
       m.redraw(true);
     }
+
+    var unmount = function () {
+      m.mount(root, null);
+      m.redraw(true);
+    };
 
     function viewMaterial() {
       $root.find(".materials>.accordion-item>a")[0].click();
